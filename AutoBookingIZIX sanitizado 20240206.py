@@ -5,7 +5,6 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.service import Service
 from selenium.common.exceptions import WebDriverException
 
 from datetime import datetime
@@ -25,46 +24,7 @@ import datetime
 def automate_booking(usr, passw):
     
     # Create a new instance of the Chrome driver
-
-    # INSTALACIÓN LOCAL DE CHROMEDRIVER
-    # Specify the path to chromedriver that you've downloaded and cached
-    # para evitar los errores de acceso online a la última versión del driver
-    # att, el chromedriver tiene que soportar la versión de Chrome instalada
-    # en este caso, v121
-    # descargar chromedriver de: https://googlechromelabs.github.io/chrome-for-testing/#stable
-    # y dejarlo localmente en:
-    # svc = Service('/usr/local/bin/chromedriver-mac-arm64/chromedriver')
-    # o instalar HomeBrew /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    # /opt/homebrew/bin/chromedriver
-    # para que mac lo autorice:
-    # xattr -d com.apple.quarantine /usr/local/bin/chromedriver-mac-arm64/chromedriver
-    # options = webdriver.ChromeOptions()
-    # driver = webdriver.Chrome(service=svc) 
-    
-    # sin instalar localmente, comprueba internet y usa versión de Chrome instalada
     driver = webdriver.Chrome() 
-
-    # def check_loader_present():
-    #     try:
-    #         driver.find_element(By.ID, 'loader')
-    #         return True
-    #     except:
-    #         return False
-
-   
-
-
-    # def wait_for_ready_state_complete(driver, timeout=30):
-    #     try:
-    #         WebDriverWait(driver, timeout).until(
-    #             lambda driver: driver.execute_script('return document.readyState') == 'complete'
-    #         )
-    #     except WebDriverException:
-    #         print("Timed out waiting for page to load")
-    #         return False
-    #     return True
-
-
 
 
     try:
@@ -128,17 +88,7 @@ def automate_booking(usr, passw):
         
         submit_button.click()
         
-        # si no sale el loader, ha habido error de captcha, repetir
-        #while not check_loader_present():
-            # print ("clicando otra vez por error captcha")
-            # time.sleep(1)
-            # submit_button = driver.find_element(by=By.ID, value="pendo_sign_in_button")
-            # submit_button.click()
-        #    print ("Error de captcha, vuelta a empezar")
-        #    raise Exception("Error de captcha")
-
-
-        # Wait for the page to load      
+        # Esperar a que esté cargada la página 
         wait.until(EC.invisibility_of_element((By.ID, 'loader')))
 
         # y hacer clic en next (semana siguiente)"
@@ -148,15 +98,12 @@ def automate_booking(usr, passw):
 
 
         # Esperar a que esté cargada la página
-
         print ("Esperar a página cargada")
         loader_element_id = "loader"
         WebDriverWait(driver, 10).until(
             EC.invisibility_of_element_located((By.ID, loader_element_id))
         )
-        #time.sleep(5)
         
-
 
         #Seleccionar todo el día
         print ("detectando la selección de días")
