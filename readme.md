@@ -1,6 +1,6 @@
 # AutoBookingIZIX
 
-El proyecto AutoBookingIZIX automatiza el proceso de iniciar sesión en un sistema de reservas, navegar por sus páginas y realizar reservas. Utiliza Selenium para la automatización web, PGPY para descifrar las credenciales de usuario y SMTP para enviar notificaciones por correo electrónico sobre el resultado de los intentos de reserva.
+El proyecto AutoBookingIZIX automatiza el proceso de reserva de capacidades en un sistema online. Incluyendo ofuscación de datos sensibles de usuario en el código, por lectura de variable de entorno de los paths locales, método de conservación de la privacidad de las claves de usuarios usando encriptación PGP, y envío de resultado de trabajos a usuarios y admin por correo electrónico. Utiliza Selenium para la automatización web, PGPY para descifrar las credenciales de usuario y SMTP para enviar notificaciones por correo electrónico sobre el resultado de los intentos de reserva.
 
 ## Características
 
