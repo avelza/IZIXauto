@@ -21,6 +21,9 @@ from cryptography.utils import CryptographyDeprecationWarning
 
 import smtplib
 from email.message import EmailMessage
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
 import mimetypes
 
 from PIL import Image
@@ -52,32 +55,51 @@ def envia_email (email, asunto, body, pantallazo=None):
     receiver_email = email
     password = pass_email_notif
 
-    # Create the email message
-    msg = EmailMessage()
-    msg['Subject'] = asunto
-    msg['From'] = sender_email
-    msg['To'] = receiver_email
-    msg.set_content(body)
-
     if pantallazo:
-        
+
+        # Create the email message
+        msg = MIMEMultipart('related')
+        msg['Subject'] = asunto
+        msg['From'] = sender_email
+        msg['To'] = receiver_email
+
+        # HTML body with image
+        html_body = f"""
+        <html>
+            <body>
+                <p>{body}</p>
+                <img src="cid:image1" style="width: 50%; height: auto;">
+            </body>
+        </html>
+        """
+        msg.attach(MIMEText(html_body, 'html'))
+
+        # Open the screenshot image to embed
         image_path = pantallazo
         ctype, encoding = mimetypes.guess_type(image_path)
         if ctype is None or encoding is not None:
             ctype = "application/octet-stream"
+        
         maintype, subtype = ctype.split("/", 1)
-
         with open(image_path, 'rb') as fp:
-            msg.add_attachment(fp.read(), maintype=maintype, subtype=subtype, filename=image_path.split("/")[-1])
+            img = MIMEImage(fp.read(), _subtype=subtype)
+            img.add_header('Content-ID', '<image1>')  # Use this 'Content-ID' in the HTML img src
+            msg.attach(img)
+    else:
+        msg = EmailMessage()
+        msg['Subject'] = asunto
+        msg['From'] = sender_email
+        msg['To'] = receiver_email
+        msg.set_content(body)
 
-    # Send the email
+    # Send the message via SMTP server
     try:
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-            smtp.login(sender_email, password)
-            smtp.send_message(msg, from_addr=sender_email, to_addrs=[receiver_email])
-        print("\nEmail enviado al usuario")
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(sender_email, password)
+            server.send_message(msg)
+            print("Email enviado al usuario")
     except Exception as e:
-        print(f"Failed to send email: {e}")
+        print(f"Fallo al enviar el email: {e}")
 
 
 def decrypt_userpass(encrypted_msg, private_key_path):
@@ -297,7 +319,7 @@ def booking_logado(usr, passw, unique_id):
         # envía un email al usuario con el resultado
         if envio_email:
             asunto = "Booking automático IZIX"
-            body = "Resultado del booking automático de hoy: " + resultado + "\n\n¡Comprueba el pantallazo adjunto!"
+            body = "Resultado del booking automático de hoy: " + resultado
             envia_email (usr, asunto, body, screenshot_path)
 
 
@@ -331,7 +353,8 @@ def procesar (fichero_a_procesar):
 
 if __name__ == "__main__":
 
-    print ("\n\nInicio\n")
+    print ("\n\nInicio")
+    print (f"{datetime.now().strftime('%Y-%m-%d, %H:%M:%S')}\n")
   
     # Ajustes
     print ("Leyendo ajustes de config.txt")
@@ -348,24 +371,31 @@ if __name__ == "__main__":
     # Read the configuration file
     config.read(config_path)
 
-    # Now, extract the variables from the configuration file
-    url_izix = config['Paths']['url_izix']                            # url de la página de booking
-    log = config['Paths']['log']                            # path al fichero local de logado
-    log_onedrive = config['Paths']['log_onedrive']          # path al fichero log, copiado en onedrive  
-    screenshot_path = config['Paths']['screenshot_path']    # path al fichero local con pantallazo
-    passes_onedrive = config['Paths']['passes_onedrive']    # path al fichero de passes en onedrive, mapeado en el pc
-    passes_file = config['Paths']['passes_file']            # path al fichero local de passes que vamos a copiar desde onedrive
-    mipass = config['Paths']['mipass']                      # path al fichero logal donde está mi usr pass
-    mipass_encriptado = config['Paths']['mipass_encriptado']                  # path al fichero logal donde está mi usr pass encriptado
-    private_key = config['Paths']['private_key']                  # path al fichero con la clave privada
-    pass_email_notif = config['Settings']['pass_email_notif']                  # contraseña de email de notificaciones
-    email_admin = config['Settings']['email_admin']                  # email de admin, para envío de log
-    email_notif = config['Settings']['email_notif']                  # email de notificaciones
-    envio_email = config.getboolean('Settings', 'enviar_email')     # envio de email a cada usuario individual
-    print ("     envio_email: " + str(envio_email))
-    batch = config.getboolean('Settings', 'funcionar_en_batch')      # procesado iterativo de todos los usr:pass del fichero en línea
-    print ("     modo batch: " + str(batch))
+    try:
+        # Now, extract the variables from the configuration file
+        url_izix = config['Paths']['url_izix']                            # url de la página de booking
+        log = config['Paths']['log']                            # path al fichero local de logado
+        log_onedrive = config['Paths']['log_onedrive']          # path al fichero log, copiado en onedrive  
+        screenshot_path = config['Paths']['screenshot_path']    # path al fichero local con pantallazo
+        passes_onedrive = config['Paths']['passes_onedrive']    # path al fichero de passes en onedrive, mapeado en el pc
+        passes_file = config['Paths']['passes_file']            # path al fichero local de passes que vamos a copiar desde onedrive
+        mipass = config['Paths']['mipass']                      # path al fichero logal donde está mi usr pass
+        mipass_encriptado = config['Paths']['mipass_encriptado']                  # path al fichero logal donde está mi usr pass encriptado
+        private_key = config['Paths']['private_key']                  # path al fichero con la clave privada
+        pass_email_notif = config['Settings']['pass_email_notif']                  # contraseña de email de notificaciones
+        email_admin = config['Settings']['email_admin']                  # email de admin, para envío de log
+        email_notif = config['Settings']['email_notif']                  # email de notificaciones
+        envio_email = config.getboolean('Settings', 'enviar_email')     # envio de email a cada usuario individual
+        print ("     envio_email: " + str(envio_email))
+        batch = config.getboolean('Settings', 'funcionar_en_batch')      # procesado iterativo de todos los usr:pass del fichero en línea
+        print ("     modo batch: " + str(batch))
 
+    except configparser.NoSectionError:
+        # Handle the case where the section is not found
+        print('Error, falta una sección en el fichero de config')
+    except configparser.NoOptionError:
+        # Handle the case where the option within the section is not found
+        print('Error, falta una opción en el fichero de config')
 
 
 
@@ -382,12 +412,14 @@ if __name__ == "__main__":
         shutil.copyfile(passes_onedrive, passes_file)
         procesar (passes_file)
     
-    body = "Resultado del booking automático:\n\n"
-    for user, result in registro_resultados.items():
-        body +=  f"Usuario: {user}, Resultado: {result}\n"
-    asunto = "Resultado de los Booking automático IZIX"
-    print ("\nEnviando resumen a admin")
-    envia_email (email_admin, asunto, body, False)
+        # envía un correo electrónico al admin, sobre el resultado del proceso batch
+        body = "\nResultado del booking automático en batch:\n\n"
+        for user, result in registro_resultados.items():
+            body +=  f"Usuario: {user} \t\tResultado: {result}\n"
+        print (body)                    # imprime en stdout el resultado del booking batch
+        asunto = "Resultado de los Booking automático IZIX"
+        print ("Enviando resumen a admin")
+        envia_email (email_admin, asunto, body, False)
 
     # copia el log a una carpeta donde pueda ver el resultado en remoto
     # shutil.copyfile(log, log_onedrive)
