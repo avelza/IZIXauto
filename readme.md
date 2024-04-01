@@ -50,7 +50,7 @@ Antes de ejecutar el script, asegúrate de tener instalado lo siguiente:
 
    ```sh
    nano ~/.zshrc
-   export izix_path="/Users/kktc183/PyProjects/AutoBookingIzix"
+   export izix_path="/Users/kuser/PyProjects/AutoBookingIzix"
       ```
     Aplicar cambios
    ```sh
@@ -146,12 +146,12 @@ Para automatizar la ejecución de tu script en macOS utilizando `launchd`, sigue
         <key>ProgramArguments</key>
         <array>
             <string>/usr/local/bin/python3</string>
-            <string>/Users/kktc183/PyProjects/AutoBookingIzix/AutoBookingIZIX.py</string>
+            <string>/Users/kuser/PyProjects/AutoBookingIzix/AutoBookingIZIX.py</string>
         </array>
         <key>EnvironmentVariables</key>
         <dict>
             <key>izix_path</key>
-            <string>/Users/kktc183/PyProjects/AutoBookingIzix</string>
+            <string>/Users/kuser/PyProjects/AutoBookingIzix</string>
         </dict>
         <key>RunAtLoad</key>
         <false/>
