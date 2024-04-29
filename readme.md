@@ -1,11 +1,12 @@
 # AutoBookingIZIX
 
-El proyecto AutoBookingIZIX automatiza el proceso de reserva de capacidades en un sistema online. Incluyendo ofuscación de datos sensibles de usuario en el código, por lectura de variable de entorno de los paths locales, método de conservación de la privacidad de las claves de usuarios usando encriptación PGP, y envío de resultado de trabajos a usuarios y admin por correo electrónico. Utiliza Selenium para la automatización web, PGPY para descifrar las credenciales de usuario y SMTP para enviar notificaciones por correo electrónico sobre el resultado de los intentos de reserva.
+El proyecto AutoBookingIZIX automatiza el proceso de reserva de capacidades en un sistema online. Incluyendo ofuscación de datos sensibles de usuario en el código, por lectura de variable de entorno de los paths locales, método de conservación de la privacidad de las claves de usuarios usando encriptación PGP, y envío de resultado de trabajos a usuarios y admin por correo electrónico. Además, paraleliza el proceso de reserva de los usuarios mediante multithreading. Utiliza Selenium para la automatización web, PGPY para descifrar las credenciales de usuario y SMTP para enviar notificaciones por correo electrónico sobre el resultado de los intentos de reserva.
 
 ## Características
 
 - **Automatización Web**: Automatiza acciones en el navegador para iniciar sesión en el sistema de reservas, navegar y hacer reservas.
 - **Descifrado de Credenciales**: Descifra de manera segura las credenciales de usuario almacenadas en formato cifrado.
+- **Multithreading**: Abre distintos hilos de ejecución paralelos para la automatización de cada usuario.
 - **Notificaciones por Correo Electrónico**: Envía correos electrónicos a los usuarios con el resultado de sus intentos de reserva.
 
 ## Prerrequisitos
@@ -48,18 +49,20 @@ Antes de ejecutar el script, asegúrate de tener instalado lo siguiente:
 
 2. **Variable de Entorno**: Establece una variable de entorno `izix_path` que apunte al directorio que contiene `config.txt`.
 
-   ```sh
-   nano ~/.zshrc
-   export izix_path="/Users/kuser/PyProjects/AutoBookingIzix"
-      ```
+    Añade esta línea a tu archivo de perfil de shell (por ejemplo, `.bash_profile`, `.zshrc`) para hacerlo persistente.
+    ```sh
+    nano ~/.zshrc
+    export izix_path="/Users/kuser/PyProjects/AutoBookingIzix"
+    ```
+        
     Aplicar cambios
-   ```sh
-   source ~/.zshrc
-   ```
 
-   Añade esta línea a tu archivo de perfil de shell (por ejemplo, `.bash_profile`, `.zshrc`) para hacerlo persistente.
-
-    **Atención**: si se usa **launchd** para la automatizacion, la variable de entorno tiene que especificarse en el fichero **plist**
+    ```sh
+    source ~/.zshrc
+    ```
+    
+    **Atención**: si se usa `launchd` para la automatizacion, la variable de entorno tiene que especificarse en el fichero `plist`
+    
 
 3. **Configuración del Correo Electrónico**: Asegúrate de que la configuración del correo electrónico en `config.txt` esté correctamente configurada para enviar notificaciones.
 
@@ -127,6 +130,14 @@ sudo pmset repeat wakeorpoweron MTWRFSU 00:00:00
 
 Estos comandos te permiten tener un control preciso sobre los ciclos de energía de tu sistema macOS, asegurando que esté activo o en reposo según tus necesidades específicas.
 
+### Tiempo de sleep
+Para asegurar que el script tiene tiempo de iniciarse una vez encendido con pmset, es convieniente fijar los tiempos de vuelta a sleep.
+
+```terminal
+sudo pmset -b sleep 10
+sudo pmset -c sleep 30
+```
+
 
 ## Programar la Ejecución con `launchd`
 
@@ -187,8 +198,16 @@ Para automatizar la ejecución de tu script en macOS utilizando `launchd`, sigue
 
 2. Utiliza `launchctl` para cargar y activar tu trabajo:
 
+    Para cargarlo:
+        
     ```sh
-    launchctl load ~/Library/LaunchAgents/com.user.autoizix.plist
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.user.autoizix.plist
+    ```
+
+    Para descargarlo (y sustituirlo por otro)
+
+    ```sh
+    launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/com.user.autoizix.plist
     ```
 
 ### Verificar y Depurar
@@ -204,7 +223,9 @@ Para automatizar la ejecución de tu script en macOS utilizando `launchd`, sigue
 ### Notas Adicionales
 
 - Este trabajo está configurado para ejecutarse automáticamente a las 00:00 horas de lunes a viernes.
+- El mac tiene que estar encendido entonces, launchd no enciende el mac. Usa pmset
 - Asegúrate de reemplazar los valores de `<string>` y `<integer>` en el archivo `.plist` según corresponda a tu configuración específica.
 - La variable de entorno `izix_path` se establece específicamente para este trabajo, asegurándose de que tu script tenga acceso a ella durante su ejecución.
+- En cada ejecución, trata de reservar para los días lunes a jueves de la semana siguiente.
 
 
